@@ -18,10 +18,11 @@ export const useGetRestaurant = (restaurantId?: string) => {
   };
 
   const { data: restaurant, isLoading } = useQuery(
-    "fetchRestaurant",
+    ["fetchRestaurant", restaurantId],
     getRestaurantByIdRequest,
     {
       enabled: !!restaurantId,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );
 
@@ -34,26 +35,37 @@ export const useSearchRestaurants = (
 ) => {
   const createSearchRequest = async (): Promise<RestaurantSearchResponse> => {
     const params = new URLSearchParams();
-    params.set("searchQuery", searchState.searchQuery);
+
+    if (searchState.searchQuery)
+      params.set("searchQuery", searchState.searchQuery);
+
     params.set("page", searchState.page.toString());
-    params.set("selectedCuisines", searchState.selectedCuisines.join(","));
-    params.set("sortOption", searchState.sortOption);
+
+    if (searchState.selectedCuisines.length > 0) {
+      params.set("selectedCuisines", searchState.selectedCuisines.join(","));
+    }
+
+    if (searchState.sortOption)
+      params.set("sortOption", searchState.sortOption);
 
     const response = await fetch(
       `${API_BASE_URL}/api/restaurant/search/${city}?${params.toString()}`
     );
 
     if (!response.ok) {
-      throw new Error("Failed to get restaurant");
+      throw new Error("Failed to search restaurants");
     }
 
     return response.json();
   };
 
   const { data: results, isLoading } = useQuery(
-    ["searchRestaurants", searchState],
+    ["searchRestaurants", city, searchState],
     createSearchRequest,
-    { enabled: !!city }
+    {
+      enabled: !!city,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    }
   );
 
   return {

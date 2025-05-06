@@ -10,18 +10,20 @@ export const useGetMyOrders = () => {
 
   const getMyOrdersRequest = async (): Promise<Order[]> => {
     const accessToken = await getAccessTokenSilently();
-
+  
     const response = await fetch(`${API_BASE_URL}/api/order`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
+  
     if (!response.ok) {
       throw new Error("Failed to get orders");
     }
-
-    return response.json();
+  
+    const data = await response.json();
+    console.log("Order API response:", data); 
+    return data;
   };
 
   const { data: orders, isLoading } = useQuery(
